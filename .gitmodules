@@ -1,0 +1,3 @@
+[submodule "TestA/librertos"]
+	path = TestA/librertos
+	url = https://github.com/djboni/librertos.git
