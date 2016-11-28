@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 #include "LibreRTOS.h"
 #include "OSevent.h"
+#include "TheHeader.h"
 
 struct OSeventFixture {
     OSeventFixture() {
@@ -11,11 +12,6 @@ struct OSeventFixture {
         BOOST_CHECK_EQUAL(OSstate.SchedulerLock, 0);
     }
 };
-
-void setCurrentTask(struct task_t* task)
-{
-    OSstate.CurrentTCB = task;
-}
 
 BOOST_FIXTURE_TEST_SUITE(OSevent, OSeventFixture)
 

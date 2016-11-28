@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 #include "LibreRTOS.h"
 #include "OSlist.h"
+#include "TheHeader.h"
 
 struct SchedulerFixture {
     SchedulerFixture() {
@@ -177,6 +178,39 @@ BOOST_AUTO_TEST_CASE(delay_task_overflowed)
     OS_tick();
     OS_scheduler();
     BOOST_CHECK_EQUAL(taskClosure.NumCalls, 2);
+}
+
+BOOST_AUTO_TEST_CASE(asdf)
+{
+    struct task_t* task1 = NULL;
+    const tick_t ticksToWait1 = 1;
+    const priority_t priority1 = 1;
+    task1 = OS_taskCreate(priority1, (taskFunction_t)NULL, NULL);
+    setCurrentTask(task1);
+    OS_taskDelay(ticksToWait1);
+
+    struct task_t* task2 = NULL;
+    const tick_t ticksToWait2 = 3;
+    const priority_t priority2 = 2;
+    task2 = OS_taskCreate(priority2, (taskFunction_t)NULL, NULL);
+    setCurrentTask(task2);
+    OS_taskDelay(ticksToWait2);
+
+    struct task_t* task3 = NULL;
+    const tick_t ticksToWait3 = 2;
+    const priority_t priority3 = 3;
+    task3 = OS_taskCreate(priority3, (taskFunction_t)NULL, NULL);
+    setCurrentTask(task3);
+    OS_taskDelay(ticksToWait3);
+
+    BOOST_CHECK_EQUAL(task1->NodeDelay.List, OSstate.BlockedTaskList_NotOverflowed);
+    BOOST_CHECK_EQUAL(task2->NodeDelay.List, OSstate.BlockedTaskList_NotOverflowed);
+    BOOST_CHECK_EQUAL(task3->NodeDelay.List, OSstate.BlockedTaskList_NotOverflowed);
+
+    BOOST_CHECK_EQUAL(OSstate.BlockedTaskList_NotOverflowed->Head->Task, task1);
+    BOOST_CHECK_EQUAL(OSstate.BlockedTaskList_NotOverflowed->Head->Next->Task, task3);
+    BOOST_CHECK_EQUAL(OSstate.BlockedTaskList_NotOverflowed->Tail->Task, task2);
+    BOOST_CHECK_EQUAL(OSstate.BlockedTaskList_NotOverflowed->Length, 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
