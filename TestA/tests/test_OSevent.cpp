@@ -43,11 +43,13 @@ BOOST_AUTO_TEST_CASE(initialize_eventRw)
 
 BOOST_AUTO_TEST_CASE(prepend_task)
 {
+    struct task_t theTask;
+
     struct eventR_t event;
     OS_eventRInit(&event);
 
-    struct task_t* task = NULL;
-    task = OS_taskCreate(0, (taskFunction_t)NULL, NULL);
+    struct task_t* task = &theTask;
+    OS_taskCreate(task, 0, (taskFunction_t)NULL, NULL);
     setCurrentTask(task);
     OS_eventPrePendTask(&event.ListRead, task);
 
@@ -63,11 +65,14 @@ BOOST_AUTO_TEST_CASE(prepend_task_after_first_pended_task)
     /* Prepended task must be in the head of the list (last task to be unblocked
      by an interrupt). */
 
+    struct task_t theTask1;
+    struct task_t theTask2;
+
     struct eventR_t event;
     OS_eventRInit(&event);
 
-    struct task_t* task1 = NULL;
-    task1 = OS_taskCreate(0, (taskFunction_t)NULL, NULL);
+    struct task_t* task1 = &theTask1;
+    OS_taskCreate(task1, 0, (taskFunction_t)NULL, NULL);
     setCurrentTask(task1);
     OS_eventPrePendTask(&event.ListRead, task1);
 
@@ -77,8 +82,8 @@ BOOST_AUTO_TEST_CASE(prepend_task_after_first_pended_task)
     BOOST_CHECK_EQUAL(event.ListRead.Tail, &task1->NodeEvent);
     BOOST_CHECK_EQUAL(event.ListRead.Length, 1);
 
-    struct task_t* task2 = NULL;
-    task2 = OS_taskCreate(1, (taskFunction_t)NULL, NULL);
+    struct task_t* task2 = &theTask2;
+    OS_taskCreate(task2, 1, (taskFunction_t)NULL, NULL);
     setCurrentTask(task2);
     OS_eventPrePendTask(&event.ListRead, task2);
 
@@ -91,13 +96,15 @@ BOOST_AUTO_TEST_CASE(prepend_task_after_first_pended_task)
 
 BOOST_AUTO_TEST_CASE(pend_task)
 {
+    struct task_t theTask;
+
     struct eventR_t event;
     OS_eventRInit(&event);
 
-    struct task_t* task = NULL;
+    struct task_t* task = &theTask;
     const tick_t ticksToWait = MAX_DELAY;
     const priority_t priority = 0;
-    task = OS_taskCreate(priority, (taskFunction_t)NULL, NULL);
+    OS_taskCreate(task, priority, (taskFunction_t)NULL, NULL);
     setCurrentTask(task);
     OS_eventPrePendTask(&event.ListRead, task);
     OS_eventPendTask(&event.ListRead, task, ticksToWait);
@@ -111,13 +118,16 @@ BOOST_AUTO_TEST_CASE(pend_task)
 
 BOOST_AUTO_TEST_CASE(pend_task_after_first_pended_task)
 {
+    struct task_t theTask1;
+    struct task_t theTask2;
+
     struct eventR_t event;
     OS_eventRInit(&event);
 
-    struct task_t* task1 = NULL;
+    struct task_t* task1 = &theTask1;
     const tick_t ticksToWait1 = MAX_DELAY;
     const priority_t priority1 = 0;
-    task1 = OS_taskCreate(priority1, (taskFunction_t)NULL, NULL);
+    OS_taskCreate(task1, priority1, (taskFunction_t)NULL, NULL);
     setCurrentTask(task1);
     OS_eventPrePendTask(&event.ListRead, task1);
     OS_eventPendTask(&event.ListRead, task1, ticksToWait1);
@@ -128,10 +138,10 @@ BOOST_AUTO_TEST_CASE(pend_task_after_first_pended_task)
     BOOST_CHECK_EQUAL(event.ListRead.Tail, &task1->NodeEvent);
     BOOST_CHECK_EQUAL(event.ListRead.Length, 1);
 
-    struct task_t* task2 = NULL;
+    struct task_t* task2 = &theTask2;
     const tick_t ticksToWait2 = MAX_DELAY;
     const priority_t priority2 = 1;
-    task2 = OS_taskCreate(priority2, (taskFunction_t)NULL, NULL);
+    OS_taskCreate(task2, priority2, (taskFunction_t)NULL, NULL);
     setCurrentTask(task2);
     OS_eventPrePendTask(&event.ListRead, task2);
     OS_eventPendTask(&event.ListRead, task2, ticksToWait2);
@@ -147,13 +157,17 @@ BOOST_AUTO_TEST_CASE(pend_task_after_first_pended_task)
 
 BOOST_AUTO_TEST_CASE(pend_task_between_tow_pended_task)
 {
+    struct task_t theTask1;
+    struct task_t theTask2;
+    struct task_t theTask3;
+
     struct eventR_t event;
     OS_eventRInit(&event);
 
-    struct task_t* task1 = NULL;
+    struct task_t* task1 = &theTask1;
     const tick_t ticksToWait1 = MAX_DELAY;
     const priority_t priority1 = 0;
-    task1 = OS_taskCreate(priority1, (taskFunction_t)NULL, NULL);
+    OS_taskCreate(task1, priority1, (taskFunction_t)NULL, NULL);
     setCurrentTask(task1);
     OS_eventPrePendTask(&event.ListRead, task1);
     OS_eventPendTask(&event.ListRead, task1, ticksToWait1);
@@ -164,10 +178,10 @@ BOOST_AUTO_TEST_CASE(pend_task_between_tow_pended_task)
     BOOST_CHECK_EQUAL(event.ListRead.Tail, &task1->NodeEvent);
     BOOST_CHECK_EQUAL(event.ListRead.Length, 1);
 
-    struct task_t* task2 = NULL;
+    struct task_t* task2 = &theTask2;
     const tick_t ticksToWait2 = MAX_DELAY;
     const priority_t priority2 = 2;
-    task2 = OS_taskCreate(priority2, (taskFunction_t)NULL, NULL);
+    OS_taskCreate(task2, priority2, (taskFunction_t)NULL, NULL);
     setCurrentTask(task2);
     OS_eventPrePendTask(&event.ListRead, task2);
     OS_eventPendTask(&event.ListRead, task2, ticksToWait2);
@@ -178,10 +192,10 @@ BOOST_AUTO_TEST_CASE(pend_task_between_tow_pended_task)
     BOOST_CHECK_EQUAL(event.ListRead.Tail, &task2->NodeEvent);
     BOOST_CHECK_EQUAL(event.ListRead.Length, 2);
 
-    struct task_t* task3 = NULL;
+    struct task_t* task3 = &theTask3;
     const tick_t ticksToWait3 = MAX_DELAY;
     const priority_t priority3 = 1;
-    task3 = OS_taskCreate(priority3, (taskFunction_t)NULL, NULL);
+    OS_taskCreate(task3, priority3, (taskFunction_t)NULL, NULL);
     setCurrentTask(task3);
     OS_eventPrePendTask(&event.ListRead, task3);
     OS_eventPendTask(&event.ListRead, task3, ticksToWait3);
@@ -200,13 +214,16 @@ BOOST_AUTO_TEST_CASE(pend_task_between_tow_pended_task)
 
 BOOST_AUTO_TEST_CASE(pend_task_before_first_pended_task)
 {
+    struct task_t theTask1;
+    struct task_t theTask2;
+
     struct eventR_t event;
     OS_eventRInit(&event);
 
-    struct task_t* task1 = NULL;
+    struct task_t* task1 = &theTask1;
     const tick_t ticksToWait1 = MAX_DELAY;
     const priority_t priority1 = 1;
-    task1 = OS_taskCreate(priority1, (taskFunction_t)NULL, NULL);
+    OS_taskCreate(task1, priority1, (taskFunction_t)NULL, NULL);
     setCurrentTask(task1);
     OS_eventPrePendTask(&event.ListRead, task1);
     OS_eventPendTask(&event.ListRead, task1, ticksToWait1);
@@ -217,10 +234,10 @@ BOOST_AUTO_TEST_CASE(pend_task_before_first_pended_task)
     BOOST_CHECK_EQUAL(event.ListRead.Tail, &task1->NodeEvent);
     BOOST_CHECK_EQUAL(event.ListRead.Length, 1);
 
-    struct task_t* task2 = NULL;
+    struct task_t* task2 = &theTask2;
     const tick_t ticksToWait2 = MAX_DELAY;
     const priority_t priority2 = 0;
-    task2 = OS_taskCreate(priority2, (taskFunction_t)NULL, NULL);
+    OS_taskCreate(task2, priority2, (taskFunction_t)NULL, NULL);
     setCurrentTask(task2);
     OS_eventPrePendTask(&event.ListRead, task2);
     OS_eventPendTask(&event.ListRead, task2, ticksToWait2);
@@ -236,21 +253,24 @@ BOOST_AUTO_TEST_CASE(pend_task_before_first_pended_task)
 
 BOOST_AUTO_TEST_CASE(unblock_task_of_higher_priority)
 {
+    struct task_t theTask1;
+    struct task_t theTask2;
+
     struct eventR_t event;
     OS_eventRInit(&event);
 
-    struct task_t* task1 = NULL;
+    struct task_t* task1 = &theTask1;
     const tick_t ticksToWait1 = MAX_DELAY;
     const priority_t priority1 = 0;
-    task1 = OS_taskCreate(priority1, (taskFunction_t)NULL, NULL);
+    OS_taskCreate(task1, priority1, (taskFunction_t)NULL, NULL);
     setCurrentTask(task1);
     OS_eventPrePendTask(&event.ListRead, task1);
     OS_eventPendTask(&event.ListRead, task1, ticksToWait1);
 
-    struct task_t* task2 = NULL;
+    struct task_t* task2 = &theTask2;
     const tick_t ticksToWait2 = MAX_DELAY;
     const priority_t priority2 = 1;
-    task2 = OS_taskCreate(priority2, (taskFunction_t)NULL, NULL);
+    OS_taskCreate(task2, priority2, (taskFunction_t)NULL, NULL);
     setCurrentTask(task2);
     OS_eventPrePendTask(&event.ListRead, task2);
     OS_eventPendTask(&event.ListRead, task2, ticksToWait2);

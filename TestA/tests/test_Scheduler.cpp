@@ -87,17 +87,16 @@ BOOST_AUTO_TEST_CASE(swap_delayed_task_list)
 
 BOOST_AUTO_TEST_CASE(create_task)
 {
+    struct task_t theTask;
+
     classTask<(taskFunction_t)NULL> taskClosure;
 
     taskFunction_t taskFunc = &taskClosure.task;
     taskParameter_t taskParam = (taskParameter_t)&taskClosure;
     priority_t priority = 0;
-    struct task_t* task = NULL;
+    struct task_t* task = &theTask;
 
-    task = OS_taskCreate(priority, taskFunc, taskParam);
-
-    /* OS_taskCreate return value. */
-    BOOST_CHECK_EQUAL(task, &OSstate.TaskControlBlocks[0]);
+    OS_taskCreate(task, priority, taskFunc, taskParam);
 
     /* OS_taskCreate TCB initialization. */
     BOOST_CHECK_EQUAL(task->State, TASKSTATE_READY);
@@ -119,14 +118,16 @@ void taskDelay1Tick(taskParameter_t param)
 
 BOOST_AUTO_TEST_CASE(delay_task_not_overflowed)
 {
+    struct task_t theTask;
+
     classTask<&taskDelay1Tick> taskClosure;
 
     taskFunction_t taskFunc = &taskClosure.task;
     taskParameter_t taskParam = (taskParameter_t)&taskClosure;
     priority_t priority = 0;
-    struct task_t* task = NULL;
+    struct task_t* task = &theTask;
 
-    task = OS_taskCreate(priority, taskFunc, taskParam);
+    OS_taskCreate(task, priority, taskFunc, taskParam);
 
     /* Check scheduler. */
     BOOST_CHECK_EQUAL(taskClosure.NumCalls, 0);
@@ -151,14 +152,16 @@ void taskDelayMaxDelay(taskParameter_t param)
 
 BOOST_AUTO_TEST_CASE(delay_task_overflowed)
 {
+    struct task_t theTask;
+
     classTask<&taskDelayMaxDelay> taskClosure;
 
     taskFunction_t taskFunc = &taskClosure.task;
     taskParameter_t taskParam = (taskParameter_t)&taskClosure;
     priority_t priority = 0;
-    struct task_t* task = NULL;
+    struct task_t* task = &theTask;
 
-    task = OS_taskCreate(priority, taskFunc, taskParam);
+    OS_taskCreate(task, priority, taskFunc, taskParam);
 
     /* Check scheduler. */
     OS_tick();
@@ -182,24 +185,28 @@ BOOST_AUTO_TEST_CASE(delay_task_overflowed)
 
 BOOST_AUTO_TEST_CASE(asdf)
 {
-    struct task_t* task1 = NULL;
+    struct task_t theTask1;
+    struct task_t theTask2;
+    struct task_t theTask3;
+
+    struct task_t* task1 = &theTask1;
     const tick_t ticksToWait1 = 1;
     const priority_t priority1 = 1;
-    task1 = OS_taskCreate(priority1, (taskFunction_t)NULL, NULL);
+    OS_taskCreate(task1, priority1, (taskFunction_t)NULL, NULL);
     setCurrentTask(task1);
     OS_taskDelay(ticksToWait1);
 
-    struct task_t* task2 = NULL;
+    struct task_t* task2 = &theTask2;
     const tick_t ticksToWait2 = 3;
     const priority_t priority2 = 2;
-    task2 = OS_taskCreate(priority2, (taskFunction_t)NULL, NULL);
+    OS_taskCreate(task2, priority2, (taskFunction_t)NULL, NULL);
     setCurrentTask(task2);
     OS_taskDelay(ticksToWait2);
 
-    struct task_t* task3 = NULL;
+    struct task_t* task3 = &theTask3;
     const tick_t ticksToWait3 = 2;
     const priority_t priority3 = 3;
-    task3 = OS_taskCreate(priority3, (taskFunction_t)NULL, NULL);
+    OS_taskCreate(task3, priority3, (taskFunction_t)NULL, NULL);
     setCurrentTask(task3);
     OS_taskDelay(ticksToWait3);
 
