@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(delay_task_overflowed)
     BOOST_CHECK_EQUAL(taskClosure.NumCalls, 2);
 }
 
-BOOST_AUTO_TEST_CASE(asdf)
+BOOST_AUTO_TEST_CASE(delay_task_insertion_order)
 {
     struct task_t theTask1;
     struct task_t theTask2;

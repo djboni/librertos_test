@@ -1,0 +1,10 @@
+1. Compile and link with --coverage
+
+2. Install gcovr
+
+3. gcovr --root=. --delete --branches --xml 
+
+References:
+
+[1] http://www.linux-mag.com/id/1409/
+[2] http://bobah.net/d4d/tools/code-coverage-with-gcov
