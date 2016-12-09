@@ -32,7 +32,7 @@ sync
 if [ $ExecutableSuccess = 0 ]; then
 
     # Uncovered branches (IDE hilight)
-    Level=1 # 0 (err), 1 (err+warn), 2 (err+warn+info)
+    Level=2 # 0 (err), 1 (err+warn), 2 (err+warn+info)
     echo; echo
     python ../script/gcovr.py . --xml --root=`(cd ../librertos; pwd)` |
             python ../script/gcovr_xml_2_compiler_like_ewi.py $Level ../librertos

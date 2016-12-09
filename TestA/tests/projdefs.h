@@ -34,7 +34,8 @@ typedef uint16_t tick_t;
 #define MAX_DELAY ((tick_t)-1)
 
 /* Assert macro. */
-#define ASSERT(x) assert(x)
+void myassert(int x);
+#define ASSERT(x) myassert(x)
 
 /* Enable/disable interrupts macros. */
 #define INTERRUPTS_ENABLE()
