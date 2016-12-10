@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(prepend_task_after_first_pended_task)
     BOOST_CHECK_EQUAL(event.ListRead.Length, 2);
 }
 
-BOOST_AUTO_TEST_CASE(pend_task)
+BOOST_AUTO_TEST_CASE(pend_task_suspend)
 {
     struct task_t theTask;
 
@@ -103,6 +103,28 @@ BOOST_AUTO_TEST_CASE(pend_task)
 
     struct task_t* task = &theTask;
     const tick_t ticksToWait = MAX_DELAY;
+    const priority_t priority = 0;
+    OS_taskCreate(task, priority, (taskFunction_t)NULL, NULL);
+    setCurrentTask(task);
+    OS_eventPrePendTask(&event.ListRead, task);
+    OS_eventPendTask(&event.ListRead, task, ticksToWait);
+
+    BOOST_CHECK_EQUAL(task->NodeEvent.List, &event.ListRead);
+
+    BOOST_CHECK_EQUAL(event.ListRead.Head, &task->NodeEvent);
+    BOOST_CHECK_EQUAL(event.ListRead.Tail, &task->NodeEvent);
+    BOOST_CHECK_EQUAL(event.ListRead.Length, 1);
+}
+
+BOOST_AUTO_TEST_CASE(pend_task_block)
+{
+    struct task_t theTask;
+
+    struct eventR_t event;
+    OS_eventRInit(&event);
+
+    struct task_t* task = &theTask;
+    const tick_t ticksToWait = 1;
     const priority_t priority = 0;
     OS_taskCreate(task, priority, (taskFunction_t)NULL, NULL);
     setCurrentTask(task);
@@ -293,6 +315,115 @@ BOOST_AUTO_TEST_CASE(unblock_task_of_higher_priority)
     BOOST_CHECK_EQUAL(event.ListRead.Length, 0);
 
     BOOST_CHECK_LT(priority1, priority2);
+}
+
+BOOST_AUTO_TEST_CASE(no_task_to_unblock)
+{
+    struct eventR_t event;
+    OS_eventRInit(&event);
+
+    OS_eventUnblockTasks(&event.ListRead);
+}
+
+BOOST_AUTO_TEST_CASE(task_unblocked_before_pending)
+{
+    struct task_t theTask;
+
+    struct eventR_t event;
+    OS_eventRInit(&event);
+
+    struct task_t* task = &theTask;
+    const tick_t ticksToWait = MAX_DELAY;
+    const priority_t priority = 0;
+    OS_taskCreate(task, priority, (taskFunction_t)NULL, NULL);
+    setCurrentTask(task);
+    OS_eventPrePendTask(&event.ListRead, task);
+    OS_eventUnblockTasks(&event.ListRead);
+    OS_eventPendTask(&event.ListRead, task, ticksToWait);
+
+    BOOST_CHECK_EQUAL(task->NodeEvent.List, &OSstate.PendingReadyTaskList);
+
+    BOOST_CHECK_EQUAL(event.ListRead.Head, (void*)&event.ListRead);
+    BOOST_CHECK_EQUAL(event.ListRead.Tail, (void*)&event.ListRead);
+    BOOST_CHECK_EQUAL(event.ListRead.Length, 0);
+}
+
+struct taskHeadList_t* listToUnblockWhilePending = NULL;
+
+void unblock_task_while_pending(void)
+{
+    OS_eventUnblockTasks(listToUnblockWhilePending);
+    librertos_test_set_concurrent_behavior(0);
+}
+
+BOOST_AUTO_TEST_CASE(task_unblocked_while_pending)
+{
+    struct task_t theTask;
+
+    struct eventR_t event;
+    OS_eventRInit(&event);
+
+    struct task_t* task = &theTask;
+    const tick_t ticksToWait = MAX_DELAY;
+    const priority_t priority = 0;
+    OS_taskCreate(task, priority, (taskFunction_t)NULL, NULL);
+    setCurrentTask(task);
+    OS_eventPrePendTask(&event.ListRead, task);
+
+    librertos_test_set_concurrent_behavior(&unblock_task_while_pending);
+    listToUnblockWhilePending = &event.ListRead;
+
+    OS_eventPendTask(&event.ListRead, task, ticksToWait);
+
+    listToUnblockWhilePending = NULL;
+    librertos_test_set_concurrent_behavior(0);
+
+    BOOST_CHECK_EQUAL(task->NodeEvent.List, &OSstate.PendingReadyTaskList);
+
+    BOOST_CHECK_EQUAL(event.ListRead.Head, (void*)&event.ListRead);
+    BOOST_CHECK_EQUAL(event.ListRead.Tail, (void*)&event.ListRead);
+    BOOST_CHECK_EQUAL(event.ListRead.Length, 0);
+}
+
+BOOST_AUTO_TEST_CASE(task_on_pos_unblocked_while_pending)
+{
+    struct task_t theTask1;
+    struct task_t theTask2;
+
+    struct eventR_t event;
+    OS_eventRInit(&event);
+
+    struct task_t* task1 = &theTask1;
+    const tick_t ticksToWait1 = MAX_DELAY;
+    const priority_t priority1 = 1;
+    OS_taskCreate(task1, priority1, (taskFunction_t)NULL, NULL);
+    setCurrentTask(task1);
+    OS_eventPrePendTask(&event.ListRead, task1);
+    OS_eventPendTask(&event.ListRead, task1, ticksToWait1);
+
+    struct task_t* task2 = &theTask2;
+    const tick_t ticksToWait2 = MAX_DELAY;
+    const priority_t priority2 = 0;
+    OS_taskCreate(task2, priority2, (taskFunction_t)NULL, NULL);
+    setCurrentTask(task2);
+    OS_eventPrePendTask(&event.ListRead, task2);
+
+    librertos_test_set_concurrent_behavior(&unblock_task_while_pending);
+    listToUnblockWhilePending = &event.ListRead;
+    {
+        OS_eventPendTask(&event.ListRead, task2, ticksToWait2);
+    }
+    listToUnblockWhilePending = NULL;
+    librertos_test_set_concurrent_behavior(0);
+
+    BOOST_CHECK_EQUAL(task1->NodeEvent.List, &OSstate.PendingReadyTaskList);
+    BOOST_CHECK_EQUAL(task2->NodeEvent.List, &event.ListRead);
+
+    BOOST_CHECK_EQUAL(event.ListRead.Head, &task2->NodeEvent);
+    BOOST_CHECK_EQUAL(event.ListRead.Tail, &task2->NodeEvent);
+    BOOST_CHECK_EQUAL(event.ListRead.Length, 1);
+
+    BOOST_CHECK_LT(priority2, priority1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -46,6 +46,11 @@ void myassert(int x);
 #define CRITICAL_ENTER() do{++_cpu_state;}while(0)
 #define CRITICAL_EXIT()  do{--_cpu_state;}while(0)
 
+/* Simulate concurrent access. For test coverage only. */
+void librertos_test_set_concurrent_behavior(void(*f)(void));
+void librertos_test_concurrent_access(void);
+#define LIBRERTOS_TEST_CONCURRENT_ACCESS() librertos_test_concurrent_access()
+
 #ifdef __cplusplus
 }
 #endif
