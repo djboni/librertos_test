@@ -352,8 +352,8 @@ struct taskHeadList_t* listToUnblockWhilePending = NULL;
 
 void unblock_task_while_pending(void)
 {
-    OS_eventUnblockTasks(listToUnblockWhilePending);
     librertos_test_set_concurrent_behavior(0);
+    OS_eventUnblockTasks(listToUnblockWhilePending);
 }
 
 BOOST_AUTO_TEST_CASE(task_unblocked_while_pending)
