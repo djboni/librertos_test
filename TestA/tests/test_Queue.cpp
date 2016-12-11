@@ -6,10 +6,17 @@
 typedef uint64_t QueType;
 
 struct QueueFixture {
-    struct Queue_t Que;
     static const int QueSize = 3;
+    static const QueType QueGuard = 0xFA57C0DEFA57C0DE;
+
     const int Len = QueSize;
-    QueType QueBuff[QueSize];
+
+    /* Buffer with guards at begin and end. */
+    const QueType Guard = QueGuard;
+    QueType QueBuff_WithGuards[QueSize + 2];
+
+    struct Queue_t Que;
+    QueType* QueBuff = &QueBuff_WithGuards[1];
 
     struct task_t Task;
 
@@ -17,15 +24,26 @@ struct QueueFixture {
         OS_init();
         OS_start();
 
-        Queue_init(&Que, &QueBuff, QueSize, sizeof(QueType));
+        QueBuff_WithGuards[0] = Guard;
+        QueBuff_WithGuards[QueSize+1] = Guard;
+
+        Queue_init(&Que, &QueBuff[0], QueSize, sizeof(QueType));
     }
     ~QueueFixture() {
         BOOST_CHECK_EQUAL(OSstate.SchedulerLock, 0);
 
+        /* These should be zero after operations are complete. */
         BOOST_CHECK_EQUAL(Que.WLock, 0);
         BOOST_CHECK_EQUAL(Que.RLock, 0);
-        BOOST_CHECK_EQUAL(Que.Buff, (void*)&QueBuff);
+
+        /* Constants after initialization. */
+        BOOST_CHECK_EQUAL(Que.ItemSize, sizeof(QueType));
+        BOOST_CHECK_EQUAL(Que.Buff, (void*)&QueBuff[0]);
         BOOST_CHECK_EQUAL(Que.BufEnd, (void*)&QueBuff[Len-1]);
+
+        /* Check overflow guards. */
+        BOOST_CHECK_EQUAL(QueBuff_WithGuards[0], Guard);
+        BOOST_CHECK_EQUAL(QueBuff_WithGuards[QueSize+1], Guard);
     }
 };
 
@@ -38,9 +56,9 @@ BOOST_AUTO_TEST_CASE(init)
     BOOST_CHECK_EQUAL(Que.Used, 0);
     BOOST_CHECK_EQUAL(Que.WLock, 0);
     BOOST_CHECK_EQUAL(Que.RLock, 0);
-    BOOST_CHECK_EQUAL(Que.Head, (void*)&QueBuff);
-    BOOST_CHECK_EQUAL(Que.Tail, (void*)&QueBuff);
-    BOOST_CHECK_EQUAL(Que.Buff, (void*)&QueBuff);
+    BOOST_CHECK_EQUAL(Que.Head, (void*)&QueBuff[0]);
+    BOOST_CHECK_EQUAL(Que.Tail, (void*)&QueBuff[0]);
+    BOOST_CHECK_EQUAL(Que.Buff, (void*)&QueBuff[0]);
     BOOST_CHECK_EQUAL(Que.BufEnd, (void*)&QueBuff[Len-1]);
 
     struct taskListNode_t* nodeHead;
@@ -73,7 +91,7 @@ BOOST_AUTO_TEST_CASE(write)
         BOOST_CHECK_EQUAL(Queue_free(&Que), Len-(i+1));
         BOOST_CHECK_EQUAL(Queue_used(&Que), i+1);
 
-        BOOST_CHECK_EQUAL(Que.Head, (void*)&QueBuff);
+        BOOST_CHECK_EQUAL(Que.Head, (void*)&QueBuff[0]);
         BOOST_CHECK_EQUAL(Que.Tail, (void*)&QueBuff[i+1 >= Len ? i+1-Len : i+1]);
         BOOST_CHECK_EQUAL(QueBuff[i], x);
     }
@@ -83,8 +101,8 @@ BOOST_AUTO_TEST_CASE(write)
 
     BOOST_CHECK_EQUAL(Que.Free, 0);
     BOOST_CHECK_EQUAL(Que.Used, Len);
-    BOOST_CHECK_EQUAL(Que.Head, (void*)&QueBuff);
-    BOOST_CHECK_EQUAL(Que.Tail, (void*)&QueBuff);
+    BOOST_CHECK_EQUAL(Que.Head, (void*)&QueBuff[0]);
+    BOOST_CHECK_EQUAL(Que.Tail, (void*)&QueBuff[0]);
 }
 
 struct Queue_t* queueToWrite = NULL;
@@ -92,8 +110,13 @@ struct Queue_t* queueToWrite = NULL;
 void write_to_queue(void)
 {
     librertos_test_set_concurrent_behavior(0);
+
+    BOOST_CHECK_EQUAL(queueToWrite->WLock, 1);
+
     QueType x = std::rand();
     BOOST_CHECK_EQUAL(Queue_write(queueToWrite, &x), 1);
+
+    BOOST_CHECK_EQUAL(queueToWrite->WLock, 2);
 }
 
 BOOST_AUTO_TEST_CASE(write_concurrent)
@@ -112,7 +135,7 @@ BOOST_AUTO_TEST_CASE(write_concurrent)
 
     BOOST_CHECK_EQUAL(Que.Free, Len-2);
     BOOST_CHECK_EQUAL(Que.Used, 2);
-    BOOST_CHECK_EQUAL(Que.Head, (void*)&QueBuff);
+    BOOST_CHECK_EQUAL(Que.Head, (void*)&QueBuff[0]);
     BOOST_CHECK_EQUAL(Que.Tail, (void*)&QueBuff[2]);
 }
 
@@ -147,7 +170,7 @@ BOOST_AUTO_TEST_CASE(read)
         BOOST_CHECK_EQUAL(Queue_used(&Que), Len-(i+1));
 
         BOOST_CHECK_EQUAL(Que.Head, (void*)&QueBuff[i+1 >= Len ? i+1-Len : i+1]);
-        BOOST_CHECK_EQUAL(Que.Tail, (void*)&QueBuff);
+        BOOST_CHECK_EQUAL(Que.Tail, (void*)&QueBuff[0]);
         BOOST_CHECK_EQUAL(QueBuff[i], x);
     }
 
@@ -156,8 +179,8 @@ BOOST_AUTO_TEST_CASE(read)
 
     BOOST_CHECK_EQUAL(Que.Free, Len);
     BOOST_CHECK_EQUAL(Que.Used, 0);
-    BOOST_CHECK_EQUAL(Que.Head, (void*)&QueBuff);
-    BOOST_CHECK_EQUAL(Que.Tail, (void*)&QueBuff);
+    BOOST_CHECK_EQUAL(Que.Head, (void*)&QueBuff[0]);
+    BOOST_CHECK_EQUAL(Que.Tail, (void*)&QueBuff[0]);
 }
 
 struct Queue_t* queueToRead = NULL;
@@ -166,7 +189,12 @@ void read_from_queue(void)
 {
     librertos_test_set_concurrent_behavior(0);
     QueType x;
+
+    BOOST_CHECK_EQUAL(queueToRead->RLock, 1);
+
     BOOST_CHECK_EQUAL(Queue_read(queueToRead, &x), 1);
+
+    BOOST_CHECK_EQUAL(queueToRead->RLock, 2);
 
     /* Second rand number. */
     std::srand(0);
@@ -195,7 +223,7 @@ BOOST_AUTO_TEST_CASE(read_concurrent)
     BOOST_CHECK_EQUAL(Que.Free, 2);
     BOOST_CHECK_EQUAL(Que.Used, Len-2);
     BOOST_CHECK_EQUAL(Que.Head, (void*)&QueBuff[2]);
-    BOOST_CHECK_EQUAL(Que.Tail, (void*)&QueBuff);
+    BOOST_CHECK_EQUAL(Que.Tail, (void*)&QueBuff[0]);
 }
 
 BOOST_AUTO_TEST_CASE(pendread_0_tick)
