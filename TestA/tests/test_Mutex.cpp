@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(unlock)
 {
     setCurrentTask(&Task1);
     Mutex_lock(&Mtx);
-    Mutex_unlock(&Mtx);
+    BOOST_CHECK_EQUAL(Mutex_unlock(&Mtx), 1);
 
     BOOST_CHECK_EQUAL(Mtx.Count, 0);
 }
@@ -81,9 +81,17 @@ BOOST_AUTO_TEST_CASE(unlock_recursive)
     setCurrentTask(&Task1);
     Mutex_lock(&Mtx);
     Mutex_lock(&Mtx);
-    Mutex_unlock(&Mtx);
+    BOOST_CHECK_EQUAL(Mutex_unlock(&Mtx), 1);
 
     BOOST_CHECK_EQUAL(Mtx.Count, 1);
+}
+
+BOOST_AUTO_TEST_CASE(unlock_unlocked)
+{
+    setCurrentTask(&Task1);
+    BOOST_CHECK_EQUAL(Mutex_unlock(&Mtx), 0);
+
+    BOOST_CHECK_EQUAL(Mtx.Count, 0);
 }
 
 BOOST_AUTO_TEST_CASE(pend_0_tick)
