@@ -34,6 +34,9 @@ struct FifoFixture {
     ~FifoFixture() {
         BOOST_CHECK_EQUAL(OSstate.SchedulerLock, 0);
 
+        /* These should not change after initialization. */
+        BOOST_CHECK_EQUAL(Fifo_length(&Fif), Len);
+
         /* These should be zero after operations are complete. */
         BOOST_CHECK_EQUAL(Fif.WLock, 0);
         BOOST_CHECK_EQUAL(Fif.RLock, 0);
