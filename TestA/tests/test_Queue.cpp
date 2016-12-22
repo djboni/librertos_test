@@ -32,6 +32,10 @@ struct QueueFixture {
     ~QueueFixture() {
         BOOST_CHECK_EQUAL(OSstate.SchedulerLock, 0);
 
+        /* These should not change after initialization. */
+        BOOST_CHECK_EQUAL(Queue_length(&Que), Len);
+        BOOST_CHECK_EQUAL(Queue_itemSize(&Que), sizeof(QueType));
+
         /* These should be zero after operations are complete. */
         BOOST_CHECK_EQUAL(Que.WLock, 0);
         BOOST_CHECK_EQUAL(Que.RLock, 0);
