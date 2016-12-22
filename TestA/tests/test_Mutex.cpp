@@ -43,6 +43,9 @@ BOOST_AUTO_TEST_CASE(lock)
 
     BOOST_CHECK_EQUAL(Mtx.Count, 1);
     BOOST_CHECK_EQUAL(Mtx.MutexOwner, &Task1);
+
+    BOOST_CHECK_EQUAL(Mutex_getCount(&Mtx), 1);
+    BOOST_CHECK_EQUAL(Mutex_getOwner(&Mtx), &Task1);
 }
 
 BOOST_AUTO_TEST_CASE(lock_already_locked)
@@ -55,6 +58,9 @@ BOOST_AUTO_TEST_CASE(lock_already_locked)
 
     BOOST_CHECK_EQUAL(Mtx.Count, 1);
     BOOST_CHECK_EQUAL(Mtx.MutexOwner, &Task1);
+
+    BOOST_CHECK_EQUAL(Mutex_getCount(&Mtx), 1);
+    BOOST_CHECK_EQUAL(Mutex_getOwner(&Mtx), &Task1);
 }
 
 BOOST_AUTO_TEST_CASE(lock_recursive)
@@ -65,6 +71,9 @@ BOOST_AUTO_TEST_CASE(lock_recursive)
 
     BOOST_CHECK_EQUAL(Mtx.Count, 2);
     BOOST_CHECK_EQUAL(Mtx.MutexOwner, &Task1);
+
+    BOOST_CHECK_EQUAL(Mutex_getCount(&Mtx), 2);
+    BOOST_CHECK_EQUAL(Mutex_getOwner(&Mtx), &Task1);
 }
 
 BOOST_AUTO_TEST_CASE(unlock)
@@ -74,6 +83,10 @@ BOOST_AUTO_TEST_CASE(unlock)
     BOOST_CHECK_EQUAL(Mutex_unlock(&Mtx), 1);
 
     BOOST_CHECK_EQUAL(Mtx.Count, 0);
+    BOOST_CHECK_EQUAL(Mtx.MutexOwner, (void*)0);
+
+    BOOST_CHECK_EQUAL(Mutex_getCount(&Mtx), 0);
+    BOOST_CHECK_EQUAL(Mutex_getOwner(&Mtx), (void*)0);
 }
 
 BOOST_AUTO_TEST_CASE(unlock_recursive)
@@ -84,6 +97,10 @@ BOOST_AUTO_TEST_CASE(unlock_recursive)
     BOOST_CHECK_EQUAL(Mutex_unlock(&Mtx), 1);
 
     BOOST_CHECK_EQUAL(Mtx.Count, 1);
+    BOOST_CHECK_EQUAL(Mtx.MutexOwner, &Task1);
+
+    BOOST_CHECK_EQUAL(Mutex_getCount(&Mtx), 1);
+    BOOST_CHECK_EQUAL(Mutex_getOwner(&Mtx), &Task1);
 }
 
 BOOST_AUTO_TEST_CASE(unlock_unlocked)
@@ -92,6 +109,10 @@ BOOST_AUTO_TEST_CASE(unlock_unlocked)
     BOOST_CHECK_EQUAL(Mutex_unlock(&Mtx), 0);
 
     BOOST_CHECK_EQUAL(Mtx.Count, 0);
+    BOOST_CHECK_EQUAL(Mtx.MutexOwner, (void*)0);
+
+    BOOST_CHECK_EQUAL(Mutex_getCount(&Mtx), 0);
+    BOOST_CHECK_EQUAL(Mutex_getOwner(&Mtx), (void*)0);
 }
 
 BOOST_AUTO_TEST_CASE(pend_0_tick)
