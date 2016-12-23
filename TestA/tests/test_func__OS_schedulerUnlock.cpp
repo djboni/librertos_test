@@ -5,6 +5,7 @@
 
 struct test_func__OS_schedulerUnlock__Fixture {
     struct task_t Task1;
+    struct task_t Task2;
 
     test_func__OS_schedulerUnlock__Fixture() {
         OS_init();
@@ -95,6 +96,61 @@ BOOST_AUTO_TEST_CASE(task_unblocked_by_tick)
     BOOST_CHECK_EQUAL(Task1.NodeDelay.List, (void*)0);
 }
 
+BOOST_AUTO_TEST_CASE(task_unblocked_by_tick_with_no_task_running)
+{
+    OS_taskCreate(&Task1, 0, 0, 0);
+    setCurrentTask(&Task1);
+    BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_READY);
+    BOOST_CHECK_EQUAL(Task1.NodeDelay.List, (void*)0);
+
+    OS_taskDelay(1);
+    BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_BLOCKED);
+    BOOST_CHECK_EQUAL(Task1.NodeDelay.List, &OSstate.BlockedTaskList1);
+
+    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 0);
+
+    setCurrentTask(NULL);
+
+    OS_schedulerLock();
+    OS_tick();
+    OS_schedulerUnlock();
+
+    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 1);
+
+    BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_READY);
+    BOOST_CHECK_EQUAL(Task1.NodeDelay.List, (void*)0);
+
+}
+
+BOOST_AUTO_TEST_CASE(task_unblocked_by_tick_with_lower_priority_task_running)
+{
+    OS_taskCreate(&Task1, 1, 0, 0);
+    BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_READY);
+    BOOST_CHECK_EQUAL(Task1.NodeDelay.List, (void*)0);
+
+    OS_taskCreate(&Task2, 0, 0, 0);
+    BOOST_CHECK_EQUAL(Task2.State, TASKSTATE_READY);
+    BOOST_CHECK_EQUAL(Task2.NodeDelay.List, (void*)0);
+
+    setCurrentTask(&Task1);
+    OS_taskDelay(1);
+    BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_BLOCKED);
+    BOOST_CHECK_EQUAL(Task1.NodeDelay.List, &OSstate.BlockedTaskList1);
+
+    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 0);
+
+    setCurrentTask(&Task2);
+
+    OS_schedulerLock();
+    OS_tick();
+    OS_schedulerUnlock();
+
+    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 1);
+
+    BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_READY);
+    BOOST_CHECK_EQUAL(Task1.NodeDelay.List, (void*)0);
+}
+
 BOOST_AUTO_TEST_CASE(task_unblocked_from_event_by_tick)
 {
     struct taskHeadList_t list;
@@ -122,7 +178,7 @@ BOOST_AUTO_TEST_CASE(task_unblocked_from_event_by_tick)
     BOOST_CHECK_EQUAL(Task1.NodeEvent.List, (void*)0);
 }
 
-BOOST_AUTO_TEST_CASE(task_unblock_suspended_pending_ready_task)
+BOOST_AUTO_TEST_CASE(task_unblock_suspended_pending_ready_task_with_no_task_running)
 {
     struct taskHeadList_t* list = &OSstate.PendingReadyTaskList;
 
@@ -132,6 +188,10 @@ BOOST_AUTO_TEST_CASE(task_unblock_suspended_pending_ready_task)
     OS_listInsertAfter(list, list->Head, &Task1.NodeEvent);
     Task1.State = TASKSTATE_SUSPENDED;
 
+    setCurrentTask(NULL);
+
+    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 0);
+
     OS_schedulerLock();
 
     BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_SUSPENDED);
@@ -139,6 +199,38 @@ BOOST_AUTO_TEST_CASE(task_unblock_suspended_pending_ready_task)
     BOOST_CHECK_EQUAL(Task1.NodeEvent.List, &OSstate.PendingReadyTaskList);
 
     OS_schedulerUnlock();
+
+    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 1);
+
+    BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_READY);
+    BOOST_CHECK_EQUAL(Task1.NodeDelay.List, (void*)0);
+    BOOST_CHECK_EQUAL(Task1.NodeEvent.List, (void*)0);
+}
+
+BOOST_AUTO_TEST_CASE(task_unblock_suspended_pending_ready_task_with_lower_priority_task_running)
+{
+    struct taskHeadList_t* list = &OSstate.PendingReadyTaskList;
+
+    OS_taskCreate(&Task1, 1, 0, 0);
+    OS_taskCreate(&Task2, 0, 0, 0);
+
+    setCurrentTask(&Task1);
+    OS_listInsertAfter(list, list->Head, &Task1.NodeEvent);
+    Task1.State = TASKSTATE_SUSPENDED;
+
+    setCurrentTask(&Task2);
+
+    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 0);
+
+    OS_schedulerLock();
+
+    BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_SUSPENDED);
+    BOOST_CHECK_EQUAL(Task1.NodeDelay.List, (void*)0);
+    BOOST_CHECK_EQUAL(Task1.NodeEvent.List, &OSstate.PendingReadyTaskList);
+
+    OS_schedulerUnlock();
+
+    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 1);
 
     BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_READY);
     BOOST_CHECK_EQUAL(Task1.NodeDelay.List, (void*)0);
