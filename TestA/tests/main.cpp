@@ -26,3 +26,10 @@ void librertos_test_concurrent_access(void)
     if(func != (void(*)(void))0)
         func();
 }
+
+extern "C"
+stattime_t US_systemRunTime(void)
+{
+    static stattime_t i = 0;
+    return ++i;
+}
