@@ -275,10 +275,10 @@ BOOST_AUTO_TEST_CASE(run_not_oneshot_timer)
     BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
     BOOST_CHECK_EQUAL(Timer1.Parameter, (void*)1);
 
-    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Next, (void*)NULL);
-    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Previous, (void*)NULL);
-    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Value, 0);
-    BOOST_CHECK_EQUAL(Timer1.NodeTimer.List, (void*)NULL);
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Next, (void*)&OSstate.TimerList);
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Previous, (void*)&OSstate.TimerList);
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Value, 1);
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.List, (void*)&OSstate.TimerList);
     BOOST_CHECK_EQUAL(Timer1.NodeTimer.Owner, &Timer1);
 }
 
@@ -451,6 +451,44 @@ BOOST_AUTO_TEST_CASE(concurrent_reset_timer)
     BOOST_CHECK_EQUAL(timerStack.top(), &TimerOneShot);
     timerStack.pop();
     BOOST_CHECK_EQUAL(timerStack.top(), &Timer1);
+}
+
+BOOST_AUTO_TEST_CASE(insert_3_timers_not_overflowed)
+{
+    Timer_reset(&Timer1);
+    OS_scheduler();
+    Timer_reset(&Timer3);
+    OS_scheduler();
+    Timer_reset(&Timer2);
+    OS_scheduler();
+
+    BOOST_CHECK_EQUAL(OSstate.TimerList.Length, 3);
+    BOOST_CHECK_EQUAL(OSstate.TimerList.Head, &Timer1.NodeTimer);
+    BOOST_CHECK_EQUAL(OSstate.TimerList.Tail, &Timer3.NodeTimer);
+
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Next, &Timer2.NodeTimer);
+    BOOST_CHECK_EQUAL(Timer2.NodeTimer.Next, &Timer3.NodeTimer);
+    BOOST_CHECK_EQUAL(Timer3.NodeTimer.Next, (struct taskListNode_t*)&OSstate.TimerList);
+}
+
+BOOST_AUTO_TEST_CASE(insert_3_timers_overflowed)
+{
+    OSstate.Tick = MAX_DELAY;
+
+    Timer_reset(&Timer1);
+    OS_scheduler();
+    Timer_reset(&Timer3);
+    OS_scheduler();
+    Timer_reset(&Timer2);
+    OS_scheduler();
+
+    BOOST_CHECK_EQUAL(OSstate.TimerList.Length, 3);
+    BOOST_CHECK_EQUAL(OSstate.TimerList.Head, &Timer1.NodeTimer);
+    BOOST_CHECK_EQUAL(OSstate.TimerList.Tail, &Timer3.NodeTimer);
+
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Next, &Timer2.NodeTimer);
+    BOOST_CHECK_EQUAL(Timer2.NodeTimer.Next, &Timer3.NodeTimer);
+    BOOST_CHECK_EQUAL(Timer3.NodeTimer.Next, (struct taskListNode_t*)&OSstate.TimerList);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
