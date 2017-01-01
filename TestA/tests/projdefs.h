@@ -27,6 +27,7 @@ extern "C" {
 /* LibreRTOS definitions. */
 #define LIBRERTOS_MAX_PRIORITY       10  /* integer > 0 */
 #define LIBRERTOS_PREEMPTION         0  /* boolean */
+#define LIBRERTOS_SOFTWARETIMERS     1  /* boolean */
 #define LIBRERTOS_STATE_GUARDS       0  /* boolean */
 #define LIBRERTOS_STATISTICS         0  /* boolean */
 
@@ -45,8 +46,8 @@ void myassert(int x);
 #define ASSERT(x) myassert(x)
 
 /* Enable/disable interrupts macros. */
-#define INTERRUPTS_ENABLE()
-#define INTERRUPTS_DISABLE()
+#define INTERRUPTS_ENABLE()  do{volatile int x;++x;}while(0)
+#define INTERRUPTS_DISABLE() do{volatile int x;++x;}while(0)
 
 /* Nested critical section management macros. */
 #define CRITICAL_VAL()   int _cpu_state = 0
