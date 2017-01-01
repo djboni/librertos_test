@@ -63,6 +63,8 @@ BOOST_FIXTURE_TEST_SUITE(Timer, TimerFixture)
 
 BOOST_AUTO_TEST_CASE(init)
 {
+    BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 0);
+
     BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
     BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
@@ -78,6 +80,7 @@ BOOST_AUTO_TEST_CASE(init)
 BOOST_AUTO_TEST_CASE(reset_stopped_timer)
 {
     Timer_reset(&Timer1);
+    BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 1);
 
     BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
@@ -95,6 +98,7 @@ BOOST_AUTO_TEST_CASE(reset_running_timer)
 {
     Timer_reset(&Timer1);
     Timer_reset(&Timer1);
+    BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 1);
 
     BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
@@ -111,6 +115,7 @@ BOOST_AUTO_TEST_CASE(reset_running_timer)
 BOOST_AUTO_TEST_CASE(stop_stopped_timer)
 {
     Timer_stop(&Timer1);
+    BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 0);
 
     BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
@@ -128,6 +133,7 @@ BOOST_AUTO_TEST_CASE(stop_runnint_timer)
 {
     Timer_reset(&Timer1);
     Timer_stop(&Timer1);
+    BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 0);
 
     BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
@@ -144,9 +150,11 @@ BOOST_AUTO_TEST_CASE(stop_runnint_timer)
 BOOST_AUTO_TEST_CASE(run_oneshot_timer)
 {
     Timer_reset(&TimerOneShot);
+    BOOST_CHECK_EQUAL(Timer_isRunning(&TimerOneShot), 1);
 
     // Run timer task
     OS_scheduler();
+    BOOST_CHECK_EQUAL(Timer_isRunning(&TimerOneShot), 0);
 
     // Test timers that were ran
     BOOST_CHECK_EQUAL(timerStack.size(), 1);
