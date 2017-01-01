@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(initialize_list_node)
     BOOST_CHECK_EQUAL(node.Previous, (struct taskListNode_t*)NULL);
     BOOST_CHECK_EQUAL(node.Value, 0);
     BOOST_CHECK_EQUAL(node.List, (struct taskHeadList_t*)NULL);
-    BOOST_CHECK_EQUAL(node.Task, &task);
+    BOOST_CHECK_EQUAL(node.Owner, &task);
 }
 
 BOOST_AUTO_TEST_CASE(insert_and_remove_node_from_list)
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(insert_and_remove_node_from_list)
     BOOST_CHECK_EQUAL(node.Previous, (struct taskListNode_t*)&list);
     BOOST_CHECK_EQUAL(node.Value, 0);
     BOOST_CHECK_EQUAL(node.List, &list);
-    BOOST_CHECK_EQUAL(node.Task, &task);
+    BOOST_CHECK_EQUAL(node.Owner, &task);
 
     /* list */
     BOOST_CHECK_EQUAL(list.Head, &node);
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(insert_and_remove_node_from_list)
     BOOST_CHECK_EQUAL(node.Previous, (struct taskListNode_t*)NULL);
     BOOST_CHECK_EQUAL(node.Value, 0);
     BOOST_CHECK_EQUAL(node.List, (struct taskHeadList_t*)NULL);
-    BOOST_CHECK_EQUAL(node.Task, &task);
+    BOOST_CHECK_EQUAL(node.Owner, &task);
 
     /* list */
     BOOST_CHECK_EQUAL(list.Head, (struct taskListNode_t*)&list);
@@ -99,21 +99,21 @@ BOOST_AUTO_TEST_CASE(insert_and_remove_nodes_from_list)
     BOOST_CHECK_EQUAL(node1.Previous, (struct taskListNode_t*)&list);
     BOOST_CHECK_EQUAL(node1.Value, 0);
     BOOST_CHECK_EQUAL(node1.List, &list);
-    BOOST_CHECK_EQUAL(node1.Task, &task1);
+    BOOST_CHECK_EQUAL(node1.Owner, &task1);
 
     /* node2 */
     BOOST_CHECK_EQUAL(node2.Next, &node3);
     BOOST_CHECK_EQUAL(node2.Previous, &node1);
     BOOST_CHECK_EQUAL(node2.Value, 0);
     BOOST_CHECK_EQUAL(node2.List, &list);
-    BOOST_CHECK_EQUAL(node2.Task, &task2);
+    BOOST_CHECK_EQUAL(node2.Owner, &task2);
 
     /* node3 */
     BOOST_CHECK_EQUAL(node3.Next, (struct taskListNode_t*)&list);
     BOOST_CHECK_EQUAL(node3.Previous, &node2);
     BOOST_CHECK_EQUAL(node3.Value, 0);
     BOOST_CHECK_EQUAL(node3.List, &list);
-    BOOST_CHECK_EQUAL(node3.Task, &task3);
+    BOOST_CHECK_EQUAL(node3.Owner, &task3);
 
     /* list */
     BOOST_CHECK_EQUAL(list.Head, &node1);
@@ -131,21 +131,21 @@ BOOST_AUTO_TEST_CASE(insert_and_remove_nodes_from_list)
     BOOST_CHECK_EQUAL(node1.Previous, (struct taskListNode_t*)NULL);
     BOOST_CHECK_EQUAL(node1.Value, 0);
     BOOST_CHECK_EQUAL(node1.List, (struct taskHeadList_t*)NULL);
-    BOOST_CHECK_EQUAL(node1.Task, &task1);
+    BOOST_CHECK_EQUAL(node1.Owner, &task1);
 
     /* node2 */
     BOOST_CHECK_EQUAL(node2.Next, (struct taskListNode_t*)NULL);
     BOOST_CHECK_EQUAL(node2.Previous, (struct taskListNode_t*)NULL);
     BOOST_CHECK_EQUAL(node2.Value, 0);
     BOOST_CHECK_EQUAL(node2.List, (struct taskHeadList_t*)NULL);
-    BOOST_CHECK_EQUAL(node2.Task, &task2);
+    BOOST_CHECK_EQUAL(node2.Owner, &task2);
 
     /* node3 */
     BOOST_CHECK_EQUAL(node3.Next, (struct taskListNode_t*)NULL);
     BOOST_CHECK_EQUAL(node3.Previous, (struct taskListNode_t*)NULL);
     BOOST_CHECK_EQUAL(node3.Value, 0);
     BOOST_CHECK_EQUAL(node3.List, (struct taskHeadList_t*)NULL);
-    BOOST_CHECK_EQUAL(node3.Task, &task3);
+    BOOST_CHECK_EQUAL(node3.Owner, &task3);
 
     /* list */
     BOOST_CHECK_EQUAL(list.Head, (struct taskListNode_t*)&list);
@@ -178,21 +178,21 @@ BOOST_AUTO_TEST_CASE(insert_prioritized_nodes_to_list)
     BOOST_CHECK_EQUAL(node1.Previous, (struct taskListNode_t*)&list);
     BOOST_CHECK_EQUAL(node1.Value, value1);
     BOOST_CHECK_EQUAL(node1.List, &list);
-    BOOST_CHECK_EQUAL(node1.Task, &task1);
+    BOOST_CHECK_EQUAL(node1.Owner, &task1);
 
     /* node2 */
     BOOST_CHECK_EQUAL(node2.Next, &node3);
     BOOST_CHECK_EQUAL(node2.Previous, &node1);
     BOOST_CHECK_EQUAL(node2.Value, value2);
     BOOST_CHECK_EQUAL(node2.List, &list);
-    BOOST_CHECK_EQUAL(node2.Task, &task2);
+    BOOST_CHECK_EQUAL(node2.Owner, &task2);
 
     /* node3 */
     BOOST_CHECK_EQUAL(node3.Next, (struct taskListNode_t*)&list);
     BOOST_CHECK_EQUAL(node3.Previous, &node2);
     BOOST_CHECK_EQUAL(node3.Value, value3);
     BOOST_CHECK_EQUAL(node3.List, &list);
-    BOOST_CHECK_EQUAL(node3.Task, &task3);
+    BOOST_CHECK_EQUAL(node3.Owner, &task3);
 
     /* list */
     BOOST_CHECK_EQUAL(list.Head, &node1);

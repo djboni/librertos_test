@@ -214,9 +214,9 @@ BOOST_AUTO_TEST_CASE(delay_task_insertion_order)
     BOOST_CHECK_EQUAL(task2->NodeDelay.List, OSstate.BlockedTaskList_NotOverflowed);
     BOOST_CHECK_EQUAL(task3->NodeDelay.List, OSstate.BlockedTaskList_NotOverflowed);
 
-    BOOST_CHECK_EQUAL(OSstate.BlockedTaskList_NotOverflowed->Head->Task, task1);
-    BOOST_CHECK_EQUAL(OSstate.BlockedTaskList_NotOverflowed->Head->Next->Task, task3);
-    BOOST_CHECK_EQUAL(OSstate.BlockedTaskList_NotOverflowed->Tail->Task, task2);
+    BOOST_CHECK_EQUAL(OSstate.BlockedTaskList_NotOverflowed->Head->Owner, task1);
+    BOOST_CHECK_EQUAL(OSstate.BlockedTaskList_NotOverflowed->Head->Next->Owner, task3);
+    BOOST_CHECK_EQUAL(OSstate.BlockedTaskList_NotOverflowed->Tail->Owner, task2);
     BOOST_CHECK_EQUAL(OSstate.BlockedTaskList_NotOverflowed->Length, 3);
 }
 
