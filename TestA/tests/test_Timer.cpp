@@ -152,6 +152,29 @@ BOOST_AUTO_TEST_CASE(reset_running_timer)
     BOOST_CHECK_EQUAL(Timer1.NodeTimer.Owner, &Timer1);
 }
 
+BOOST_AUTO_TEST_CASE(reset_running_index_timer)
+{
+    // Manually insert timer on ordered timers list
+    Timer1.NodeTimer.Value = (tick_t)(OSstate.Tick + Timer1.Period);
+    OS_listInsertAfter(&OSstate.TimerList, OSstate.TimerList.Head, &Timer1.NodeTimer);
+    OSstate.TimerIndex = &Timer1.NodeTimer;
+    BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 1);
+
+    Timer_reset(&Timer1);
+    BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 1);
+
+    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
+    BOOST_CHECK_EQUAL(Timer1.Period, 1);
+    BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
+    BOOST_CHECK_EQUAL(Timer1.Parameter, (void*)1);
+
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Next, (void*)&OSstate.TimerUnorderedList);
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Previous, (void*)&OSstate.TimerUnorderedList);
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Value, 1);
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.List, &OSstate.TimerUnorderedList);
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Owner, &Timer1);
+}
+
 BOOST_AUTO_TEST_CASE(stop_stopped_timer)
 {
     Timer_stop(&Timer1);
@@ -169,7 +192,7 @@ BOOST_AUTO_TEST_CASE(stop_stopped_timer)
     BOOST_CHECK_EQUAL(Timer1.NodeTimer.Owner, &Timer1);
 }
 
-BOOST_AUTO_TEST_CASE(stop_runnint_timer)
+BOOST_AUTO_TEST_CASE(stop_running_timer)
 {
     Timer_reset(&Timer1);
     Timer_stop(&Timer1);
@@ -183,6 +206,29 @@ BOOST_AUTO_TEST_CASE(stop_runnint_timer)
     BOOST_CHECK_EQUAL(Timer1.NodeTimer.Next, (void*)NULL);
     BOOST_CHECK_EQUAL(Timer1.NodeTimer.Previous, (void*)NULL);
     BOOST_CHECK_EQUAL(Timer1.NodeTimer.Value, 0);
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.List, (void*)NULL);
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Owner, &Timer1);
+}
+
+BOOST_AUTO_TEST_CASE(stop_running_index_timer)
+{
+    // Manually insert timer on ordered timers list
+    Timer1.NodeTimer.Value = (tick_t)(OSstate.Tick + Timer1.Period);
+    OS_listInsertAfter(&OSstate.TimerList, OSstate.TimerList.Head, &Timer1.NodeTimer);
+    OSstate.TimerIndex = &Timer1.NodeTimer;
+    BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 1);
+
+    Timer_stop(&Timer1);
+    BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 0);
+
+    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
+    BOOST_CHECK_EQUAL(Timer1.Period, 1);
+    BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
+    BOOST_CHECK_EQUAL(Timer1.Parameter, (void*)1);
+
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Next, (void*)NULL);
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Previous, (void*)NULL);
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Value, 1);
     BOOST_CHECK_EQUAL(Timer1.NodeTimer.List, (void*)NULL);
     BOOST_CHECK_EQUAL(Timer1.NodeTimer.Owner, &Timer1);
 }
