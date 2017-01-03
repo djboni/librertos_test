@@ -491,4 +491,67 @@ BOOST_AUTO_TEST_CASE(insert_3_timers_overflowed)
     BOOST_CHECK_EQUAL(Timer3.NodeTimer.Next, (struct taskListNode_t*)&OSstate.TimerList);
 }
 
+static struct Timer_t* timerToReomve1 = NULL;
+static struct Timer_t* timerToReomve2 = NULL;
+void timer_remove(void)
+{
+    librertos_test_set_concurrent_behavior(0);
+    if(timerToReomve1)
+        Timer_stop(timerToReomve1);
+    if(timerToReomve2)
+        Timer_stop(timerToReomve2);
+}
+
+BOOST_AUTO_TEST_CASE(insert_concurrent_remove_pos)
+{
+    Timer_reset(&Timer1);
+    Timer_reset(&Timer3);
+    OS_scheduler();
+
+    librertos_test_set_concurrent_behavior(&timer_remove);
+    timerToReomve1 = &Timer1;
+    timerToReomve2 = NULL;
+
+    Timer_reset(&Timer2);
+    OS_scheduler();
+
+    timerToReomve1 = NULL;
+    timerToReomve2 = NULL;
+    librertos_test_set_concurrent_behavior(0);
+
+    BOOST_CHECK_EQUAL(OSstate.TimerList.Length, 2);
+    BOOST_CHECK_EQUAL(OSstate.TimerList.Head, &Timer2.NodeTimer);
+    BOOST_CHECK_EQUAL(OSstate.TimerList.Tail, &Timer3.NodeTimer);
+
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Next, (void*)NULL);
+    BOOST_CHECK_EQUAL(Timer2.NodeTimer.Next, &Timer3.NodeTimer);
+    BOOST_CHECK_EQUAL(Timer3.NodeTimer.Next, (struct taskListNode_t*)&OSstate.TimerList);
+}
+
+BOOST_AUTO_TEST_CASE(insert_concurrent_remove_node)
+{
+    Timer_reset(&Timer1);
+    Timer_reset(&Timer3);
+    OS_scheduler();
+
+    librertos_test_set_concurrent_behavior(&timer_remove);
+    timerToReomve1 = &Timer1;
+    timerToReomve2 = &Timer2;
+
+    Timer_reset(&Timer2);
+    OS_scheduler();
+
+    timerToReomve1 = NULL;
+    timerToReomve2 = NULL;
+    librertos_test_set_concurrent_behavior(0);
+
+    BOOST_CHECK_EQUAL(OSstate.TimerList.Length, 1);
+    BOOST_CHECK_EQUAL(OSstate.TimerList.Head, &Timer3.NodeTimer);
+    BOOST_CHECK_EQUAL(OSstate.TimerList.Tail, &Timer3.NodeTimer);
+
+    BOOST_CHECK_EQUAL(Timer1.NodeTimer.Next, (void*)NULL);
+    BOOST_CHECK_EQUAL(Timer2.NodeTimer.Next, (void*)NULL);
+    BOOST_CHECK_EQUAL(Timer3.NodeTimer.Next, (struct taskListNode_t*)&OSstate.TimerList);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
