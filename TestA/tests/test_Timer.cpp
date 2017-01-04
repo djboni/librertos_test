@@ -45,11 +45,11 @@ struct TimerFixture {
 
         OS_timerTaskCreate(1);
 
-        Timer_init(&Timer1, TIMERTYPE_DEFAULT, 1, &timerFunction, (void*)1);
-        Timer_init(&Timer2, TIMERTYPE_DEFAULT, 2, &timerFunction, (void*)2);
-        Timer_init(&Timer3, TIMERTYPE_DEFAULT, 3, &timerFunction, (void*)3);
+        Timer_init(&Timer1, TIMERTYPE_ONESHOT, 1, &timerFunction, (void*)1);
+        Timer_init(&Timer2, TIMERTYPE_ONESHOT, 2, &timerFunction, (void*)2);
+        Timer_init(&Timer3, TIMERTYPE_ONESHOT, 3, &timerFunction, (void*)3);
         Timer_init(&TimerAuto, TIMERTYPE_AUTO, 1, &timerFunction_Auto, (void*)10);
-        Timer_init(&TimerOneShot, TIMERTYPE_ONESHOT, 0, &timerFunction, (void*)20);
+        Timer_init(&TimerOneShot, TIMERTYPE_NOPERIOD, 0, &timerFunction, (void*)20);
     }
     ~TimerFixture() {
         BOOST_CHECK_EQUAL(OSstate.SchedulerLock, 0);
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(init)
 {
     BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 0);
 
-    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
+    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_ONESHOT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
     BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
     BOOST_CHECK_EQUAL(Timer1.Parameter, (void*)1);
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(start_stopped_timer)
     Timer_start(&Timer1);
     BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 1);
 
-    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
+    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_ONESHOT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
     BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
     BOOST_CHECK_EQUAL(Timer1.Parameter, (void*)1);
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(start_running_timer)
     Timer_start(&Timer1);
     BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 1);
 
-    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
+    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_ONESHOT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
     BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
     BOOST_CHECK_EQUAL(Timer1.Parameter, (void*)1);
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(reset_stopped_timer)
     Timer_reset(&Timer1);
     BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 1);
 
-    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
+    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_ONESHOT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
     BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
     BOOST_CHECK_EQUAL(Timer1.Parameter, (void*)1);
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(reset_running_timer)
     Timer_reset(&Timer1);
     BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 1);
 
-    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
+    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_ONESHOT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
     BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
     BOOST_CHECK_EQUAL(Timer1.Parameter, (void*)1);
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(reset_running_index_timer)
     Timer_reset(&Timer1);
     BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 1);
 
-    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
+    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_ONESHOT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
     BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
     BOOST_CHECK_EQUAL(Timer1.Parameter, (void*)1);
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(stop_stopped_timer)
     Timer_stop(&Timer1);
     BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 0);
 
-    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
+    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_ONESHOT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
     BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
     BOOST_CHECK_EQUAL(Timer1.Parameter, (void*)1);
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(stop_running_timer)
     Timer_stop(&Timer1);
     BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 0);
 
-    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
+    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_ONESHOT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
     BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
     BOOST_CHECK_EQUAL(Timer1.Parameter, (void*)1);
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(stop_running_index_timer)
     Timer_stop(&Timer1);
     BOOST_CHECK_EQUAL(Timer_isRunning(&Timer1), 0);
 
-    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
+    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_ONESHOT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
     BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
     BOOST_CHECK_EQUAL(Timer1.Parameter, (void*)1);
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(run_oneshot_timer)
     BOOST_CHECK_EQUAL(timerStack.top(), &TimerOneShot);
 
     // Test timer data
-    BOOST_CHECK_EQUAL(TimerOneShot.Type, TIMERTYPE_ONESHOT);
+    BOOST_CHECK_EQUAL(TimerOneShot.Type, TIMERTYPE_NOPERIOD);
     BOOST_CHECK_EQUAL(TimerOneShot.Period, 0);
     BOOST_CHECK_EQUAL(TimerOneShot.Function, &timerFunction);
     BOOST_CHECK_EQUAL(TimerOneShot.Parameter, (void*)20);
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(run_not_oneshot_timer)
     BOOST_CHECK_EQUAL(timerStack.size(), 0);
 
     // Test timer data
-    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
+    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_ONESHOT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
     BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
     BOOST_CHECK_EQUAL(Timer1.Parameter, (void*)1);
@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(not_ready_timer)
     BOOST_CHECK_EQUAL(timerStack.size(), 0);
 
     // Test timer data
-    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
+    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_ONESHOT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
     BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
     BOOST_CHECK_EQUAL(Timer1.Parameter, (void*)1);
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(ready_timer)
     BOOST_CHECK_EQUAL(timerStack.top(), &Timer1);
 
     // Test timer data
-    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_DEFAULT);
+    BOOST_CHECK_EQUAL(Timer1.Type, TIMERTYPE_ONESHOT);
     BOOST_CHECK_EQUAL(Timer1.Period, 1);
     BOOST_CHECK_EQUAL(Timer1.Function, &timerFunction);
     BOOST_CHECK_EQUAL(Timer1.Parameter, (void*)1);

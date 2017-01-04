@@ -107,15 +107,11 @@ BOOST_AUTO_TEST_CASE(task_unblocked_by_tick_with_no_task_running)
     BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_BLOCKED);
     BOOST_CHECK_EQUAL(Task1.NodeDelay.List, &OSstate.BlockedTaskList1);
 
-    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 0);
-
     setCurrentTask(NULL);
 
     OS_schedulerLock();
     OS_tick();
     OS_schedulerUnlock();
-
-    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 1);
 
     BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_READY);
     BOOST_CHECK_EQUAL(Task1.NodeDelay.List, (void*)0);
@@ -137,15 +133,11 @@ BOOST_AUTO_TEST_CASE(task_unblocked_by_tick_with_lower_priority_task_running)
     BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_BLOCKED);
     BOOST_CHECK_EQUAL(Task1.NodeDelay.List, &OSstate.BlockedTaskList1);
 
-    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 0);
-
     setCurrentTask(&Task2);
 
     OS_schedulerLock();
     OS_tick();
     OS_schedulerUnlock();
-
-    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 1);
 
     BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_READY);
     BOOST_CHECK_EQUAL(Task1.NodeDelay.List, (void*)0);
@@ -190,8 +182,6 @@ BOOST_AUTO_TEST_CASE(task_unblock_suspended_pending_ready_task_with_no_task_runn
 
     setCurrentTask(NULL);
 
-    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 0);
-
     OS_schedulerLock();
 
     BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_SUSPENDED);
@@ -199,8 +189,6 @@ BOOST_AUTO_TEST_CASE(task_unblock_suspended_pending_ready_task_with_no_task_runn
     BOOST_CHECK_EQUAL(Task1.NodeEvent.List, &OSstate.PendingReadyTaskList);
 
     OS_schedulerUnlock();
-
-    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 1);
 
     BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_READY);
     BOOST_CHECK_EQUAL(Task1.NodeDelay.List, (void*)0);
@@ -220,8 +208,6 @@ BOOST_AUTO_TEST_CASE(task_unblock_suspended_pending_ready_task_with_lower_priori
 
     setCurrentTask(&Task2);
 
-    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 0);
-
     OS_schedulerLock();
 
     BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_SUSPENDED);
@@ -229,8 +215,6 @@ BOOST_AUTO_TEST_CASE(task_unblock_suspended_pending_ready_task_with_lower_priori
     BOOST_CHECK_EQUAL(Task1.NodeEvent.List, &OSstate.PendingReadyTaskList);
 
     OS_schedulerUnlock();
-
-    BOOST_CHECK_EQUAL(OSstate.HigherReadyTask, 1);
 
     BOOST_CHECK_EQUAL(Task1.State, TASKSTATE_READY);
     BOOST_CHECK_EQUAL(Task1.NodeDelay.List, (void*)0);
