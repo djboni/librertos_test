@@ -1,3 +1,0 @@
-1. Link with -lboost_unit_test_framework
-
-2. Install libboost-test-dev

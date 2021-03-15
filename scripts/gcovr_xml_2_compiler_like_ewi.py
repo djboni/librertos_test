@@ -135,14 +135,3 @@ for XmlCoverage in root.iter('coverage'):
 	print("Uncovered: %-0s %9.2f%% %9.2f%%" %
 			('', Total_LineCoverage, Total_BranchCoverage) )
 
-
-
-
-
-
-
-
-
-
-
-

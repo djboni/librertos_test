@@ -43,7 +43,7 @@
 
 sed '
 s/\(.*\)(\(.*\)): info: \(.*\)/\1:\2: info: \3/
-s/\(.*\)(\(.*\)): warning in \(.*\)/\1:\2: warning: \3/
-s/\(.*\)(\(.*\)): error in \(.*\)/\1:\2: error: \3/
-s/\(.*\)(\(.*\)): fatal error in \(.*\)/\1:\2: fatal error: \3/
+s/\(.*\)(\(.*\)): warning: in \(.*\)/\1:\2: warning: \3/
+s/\(.*\)(\(.*\)): error: in \(.*\)/\1:\2: error: \3/
+s/\(.*\)(\(.*\)): fatal error: in \(.*\)/\1:\2: fatal error: \3/
 '
